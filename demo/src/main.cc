@@ -1,7 +1,3 @@
-<<<<<<< Updated upstream
-int main(int argc, char** argv) {
-    return 0;
-=======
 #include <iostream>
 #include <vector>
 
@@ -17,6 +13,5 @@ int main(int argc, char** argv) {
     int* const ap = &a;
     *ap = 3;
     std::cout << a << std::endl;
->>>>>>> Stashed changes
 }
 
