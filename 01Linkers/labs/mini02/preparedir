@@ -1,0 +1,29 @@
+#/bin/sh
+
+TOPSECRET=.private/dontlookatme/topsecret
+
+cd $TOPSECRET
+rm -f $TOPSECRET/*.o
+g++ -c *.cpp --std=gnu++14 \
+  -isystem /bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/include \
+  -L /bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/lib \
+  -lbsl
+
+cd -
+cp $TOPSECRET/*.o .
+
+RHLIBS=/opt/rh/devtoolset-4/root/usr/lib/gcc/x86_64-redhat-linux/5.3.1/32
+BBLIBS=/bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/lib
+echo "ld -dynamic-linker /lib/ld-linux.so.2 -m elf_i386 -o fb\\" > ldcommand
+echo "  /usr/lib/crt1.o \\" >> ldcommand
+echo "  /usr/lib/crti.o \\" >> ldcommand
+echo "  *.o \\" >> ldcommand
+echo "  ${RHLIBS}/crtbegin.o \\" >> ldcommand
+echo "  ${BBLIBS}/libbsl.a \\" >> ldcommand
+echo "  /usr/lib/libm.so \\" >> ldcommand
+echo "  /usr/lib/libstdc++.so.6 \\" >> ldcommand
+echo "  ${RHLIBS}/crtend.o \\" >> ldcommand
+echo "  /usr/lib/libc.so \\" >> ldcommand
+echo "  /usr/lib/crtn.o" >>ldcommand
+
+chmod +x ldcommand

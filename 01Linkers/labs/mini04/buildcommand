@@ -1,0 +1,4 @@
+g++ --std=gnu++14 \
+  -I. \
+  *.cpp \
+  -o revenue \

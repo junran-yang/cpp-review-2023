@@ -1,0 +1,12 @@
+#!/bin/sh
+
+TOPSECRET=.private/dontlookatme/topsecret
+
+cd $TOPSECRET
+rm -f $TOPSECRET/*.o
+g++ --std=gnu++14  \
+  -isystem /bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/include \
+  -c *.cpp
+
+cd -
+cp $TOPSECRET/*.o .
