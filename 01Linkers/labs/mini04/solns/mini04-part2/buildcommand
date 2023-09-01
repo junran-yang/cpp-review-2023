@@ -1,0 +1,6 @@
+g++ -m32 --std=gnu++14 \
+  -I . \
+  -isystem /bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/include \
+  *.cpp -o revenue.tsk \
+  -L /bb/build/Linux-x86_64-32/release/robolibs/stage/opt/bb/lib \
+  -lbsl -lbde

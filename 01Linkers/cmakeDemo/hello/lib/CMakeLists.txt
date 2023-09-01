@@ -1,0 +1,1 @@
+add_library(helper STATIC helper.cc)
