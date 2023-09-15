@@ -387,3 +387,47 @@ Take-away
     * class
     * preprocessing; linking
     * make
+
+Another Round of Take-away
+==========================
+```
+    .h   -  .h   -  .h   -  .h   -  .h      preprocess: one def rule in TU
+    |/      \|/     \|/     \|/     \|         compile: name - shape     
+.cc|TU|.o   .cc     .cc     .cc     .cc     
+    \       \       |       /       /             link: one def across .o's       
+                  binary                                symbol - offset
+```
+* in 1 TU
+    * 1 definition: var, func, class
+    * recap 
+        ```
+        def    | var: 1    | func: 1   | class: 1  
+        decl   | var: n    | func: n   | class: n  
+        ```
+        * you can't have 2 definitions in 1 TU, let alone conflicting defs
+        * you can have 2 declarations, as long as they don't conflict 
+            * e.g. `int a; double a;`
+            * e.g. `int a; void a()` - var and func cannot have the same name
+    * one possible scenario
+        ```
+        .h  .h      no: both contains definition for same var|func|class
+        |   /           even if they're identical; even if they're inlined
+        .cc
+        ```
+* across TU's
+    * 1 definition: var, func; class is compiled away
+    * recap
+        ```
+        def    | var: 1    | func: 1   | class: n  
+        decl   | var: n    | func: n   | class: n  
+        ```
+        * for var|func, you can't have 2 definitions, let alone conflicting ones
+            * var and func can't share name
+        * class def, like decls, it evaporates in compilation, so you can have 2 in different TUs
+        * conflicting ones => undefined behavior (esp. applies to class def)
+    * one possible scenario
+        ```
+        .h          no: contains definition for var|func
+        |   \       ok: contains definition for class
+        .cc .cc
+        ```

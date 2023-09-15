@@ -441,6 +441,7 @@ Take-away
       the very top of the application
 
 ## **deferred**
+* obj, pass & ret is also worth revisiting
 * rvalue referrence; return by value revisit
 * function overloading
 * where mustn't we throw exception, e.g. destructor

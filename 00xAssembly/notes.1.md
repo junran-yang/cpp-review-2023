@@ -309,3 +309,4 @@ q       l       w       b       - instr
 %r8     %r8d    %r8w    %r8b    - reg
 ```
 * `sizeof(bool)` == `sizeof(char)` == 1 byte
+* Each address identifies a single byte (eight bits) of storage.

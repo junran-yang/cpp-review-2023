@@ -8,10 +8,10 @@ enum Flavor {
     Strawberry
 };
 
+
+class a;
+class a;
+
 int main(int argc, char** argv) {
-    int a = 5;
-    int* const ap = &a;
-    *ap = 3;
-    std::cout << a << std::endl;
 }
 
