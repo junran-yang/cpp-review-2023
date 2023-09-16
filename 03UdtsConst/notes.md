@@ -1,20 +1,3 @@
-Questions
-=========
-* const
-    * const int* - we can still change the int value, right? 
-    * const and class pointer
-        * is this pointer of type `const Foo* const`? 
-    * return value - this I couldn't understand
-        ```	
-        int& demo() const { return a; }
-        ```
-        * error: binding reference of type 'int' to value of type 'const int' drops 'const' qualifier		
-        * a is considered a `const int` since const is provided to the function 
-        * can I overwrite const functions? e.g. `void demo(); void demo() const;`? 
-    * pass a const string - can members still be modified? can things pointed to by members be modified? 
-    * need a revisit on passing/returning by value & copying
-    * const, name, object, from a compiler's point of view
-
 Section 01 Enumerations
 =======================
 ## example
