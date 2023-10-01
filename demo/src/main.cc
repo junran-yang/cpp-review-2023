@@ -4,24 +4,17 @@
 #include "price.h"
 #include "security.h"
 
+class A { };
 
- class Demo {
+class B {
   public:
-    Demo() {
-      std::cout << "default ctor" << std::endl;
+    operator A&() {
+      return a;
     }
-
-    Demo(int _a) : a(_a) {
-      std::cout << "direct ctor " << a << std::endl;
-    }
-
-    Demo(const Demo& other) : a(other.a) {
-      std::cout << "copy ctor " << a << std::endl;
-    }
-
-    int a;
+    A a;
 };
 
-int main(int argc, char** argv) {
-  nullptr_t p = nullptr;
+int main() {
+  B b;
+  const A& a = b;
 }
