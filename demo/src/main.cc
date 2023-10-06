@@ -1,20 +1,26 @@
 #include <iostream>
 #include <string>
+#include <type_traits>
 
 #include "price.h"
 #include "security.h"
 
-class A { };
+// std::cout << "B()" << std::endl;
 
-class B {
-  public:
-    operator A&() {
-      return a;
-    }
-    A a;
+class A { 
+  public: 
 };
 
+class B { 
+  public: 
+};
+
+class C : public A, public B { 
+  public: 
+};
+
+
 int main() {
-  B b;
-  const A& a = b;
+  A a;
+  static_cast<B&>(a);
 }
