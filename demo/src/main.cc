@@ -1,20 +1,12 @@
 #include <iostream>
-#include <string>
-#include <type_traits>
 
-#include "price.h"
-#include "security.h"
+void f() {}
+namespace a { void f() {} }
+class A { void f() {} };
+class B { static void g() {}};
 
-// std::cout << "B()" << std::endl;
 
-class A {
-  public:
-    int a = 10;
-};
 
 int main() {
-  int* a = new int[5]{1, 2, 3};
-  for (int i = 0; i < 5; i++) {
-    std::cout << a[i] << std::endl;
-  }
+  priceDemo();
 }

@@ -60,7 +60,7 @@ Section 3 + Lab 3: Object files (Symbols)
     * `nm a.o`
         ```
         0000000000000000 T __Z11frobscottlev
-                        U _humplecrimp
+                         U _humplecrimp
         0000000000000014 D _zoonk
         0000000000000000 t ltmp0
         0000000000000014 d ltmp1
@@ -71,7 +71,7 @@ Section 3 + Lab 3: Object files (Symbols)
         * they have external names, mapped to the same address
         * **they are not local variable**
         * see below
-    * `objdump -d a.o`
+    * `objdump -d a.o` (ARM architecture has a different instr set)
         ```
         Disassembly of section __TEXT,__text:
         0000000000000000 <ltmp0>:
