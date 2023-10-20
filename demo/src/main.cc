@@ -1,12 +1,7 @@
 #include <iostream>
 
-void f() {}
-namespace a { void f() {} }
-class A { void f() {} };
-class B { static void g() {}};
-
-
 
 int main() {
-  priceDemo();
+  int a[] = "hello";
+  std::cout << a << std::endl;
 }
