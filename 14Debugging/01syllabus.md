@@ -36,30 +36,32 @@
         * [x] reverse-cont
 * undo.io watchpoint
     * efficiency
-        * 5 easy ways to reduce your debugging hours
-        * GDB typing - type less in GDB
+        * [x] 5 easy ways to reduce your debugging hours
+            - glossed over, seems covered in other sessions
+        * [x] GDB typing - type less in GDB
+            - glossed over, seems covered in other sessions
     * memory
         * [x] How to search memory for a byte sequence with GDB command find
     * time travel
         * [x] Time travel debugging with rr debugger
         * Save Time Debugging with Time Travel Debugging
-        * Can't use a reversible debugger? Try these GDB commands
         * Time travel debugging in GDB
+        * Can't use a reversible debugger? Try these GDB commands
     * pretty printing
+        * Here is a quick way to pretty-print structures in GDB
         * Save time debugging in GDB with pretty printing
         * Debugging with pretty printers in GDB - part 2
         * Debugging with pretty printers in GDB - part 3
-        * Here is a quick way to pretty-print structures in GDB
     * under the hood
         * How Linux C++ Debuggers Really Work
         * Under the hood of Linux c++ debugging tools
         * Build for debug
     * breakpoints
+        * GDB catchpoints
         * Watchpoints - more than watch and continue
+        * GDB breakpoints commands
         * GDB brekpoints types: conditional breakpoints, regex
         * conditional breakpoints
-        * GDB catchpoints
-        * GDB breakpoints commands
     * misc
         * How to use the GDB command hook
         * A quick introduction to using Valgrind and AddressSanitizer
