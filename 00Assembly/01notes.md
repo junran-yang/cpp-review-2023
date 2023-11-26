@@ -158,6 +158,129 @@ Address modes
     0x4003F0	    0x400470	    0x4013F0	    0xF80
     ```
 
+Calling Convention
+==================
+## Argument passing and stack frames
+* args:
+    * first 6  `%rdi, %rsi, %rdx, %rcx, %r8, %r9`
+    * 7th and on: stack
+* return value: `%rax`
+* rule highlights
+    * A structure argument that fits in a single machine word (64 bits/8 bytes) 
+    is passed in a single register.
+    * A structure that fits in two to four machine words (16–32 bytes) is passed
+    in sequential registers, as if it were multiple arguments.
+    * A structure that’s larger than four machine words is always passed on the 
+    stack.
+    * Floating point arguments are generally passed in special registers
+    * If the return value takes more than eight bytes, then the **caller** 
+    reserves space for the return value, and passes the address of that space as
+    the first argument of the function. The **callee** will fill in that space 
+    when it returns.
+
+## Stack
+* `push` 
+    * modifies both stack pointer & stack segment
+    * `pushq X`: `subq $8, %rsp; movq X, (%rsp)` 
+* `pop`
+    * `popq X`: `movq (%rsp), X; addq $8, %rsp`
+* alignment
+    * each stack frame be a multiple of 16 bytes
+    * when a callq instruction begins execution, `%rsp` must be 16-byte aligned
+    * every function’s entry %rsp address will be 8 bytes off a multiple of 16
+
+## Return address and entry and exit sequence
+* entry
+    * caller
+        1. stores the first six arguments in the corresponding registers
+        2. store the surplus arguments (> 6 args, large args) on its stack frame
+            * increasing order
+            * The 7th argument must be stored at (%rsp) when executing `callq`
+        3. saves any caller-saved registers
+        4. executes `callq FUNCTION`
+            * = `pushq $NEXT_INSTRUCTION; jmp FUNCTION`
+            * = `subq $8, %rsp; movq $NEXT_INSTRUCTION, (%rsp); jmp FUNCTION`
+* exit
+    * callee
+        1. places its return value in `%rax`
+        2. restores the stack pointer to its value at entry, if necessary
+        3. executes `retq`
+            * = `popq %rip`
+    * caller
+        1. cleans up any space it prepared for arguments
+        2. restores caller-saved registers if necessary
+
+## Callee-saved registers and caller-saved registers
+* Callers can simply use callee-saved registers across function calls; in this 
+sense they behave like C++ local variables
+* Caller-saved registers behave differently: if a caller wants to preserve the 
+value of a caller-saved register across a function call, the caller must 
+explicitly save it before the callq and restore it when the function resumes.
+
+## Base pointer
+* For simple functions, an optimizing compiler generally treats this like any 
+other callee-saved general-purpose register. 
+* However, for more complex functions, %rbp is used in a specific pattern that 
+facilitates debugging
+* entry
+    1. `pushq %rbp`
+    2. `movq %rsp, %rbp`
+* exit
+    1. ...
+    2. `movq %rbp, %rsp; popq %rbp; retq`
+        * = `leave; retq`
+
+## Stack size and red zone
+* stack size
+    * if a function accesses nonexistent memory near %rsp, the OS assumes it’s 
+    for the stack and transparently allocates new memory there 
+* red zone
+    * small area above the stack pointer (that is, at lower addresses than %rsp) 
+    that can be used by the currently-running function for local variables
+    * for small functions push and pop instructions end up taking time
+
+Branches
+========
+* A branch instruction jumps to a new instruction without saving a return 
+address on the stack
+
+## unconditional
+    * `jmp`, `j`
+
+## conditional
+* condition flags
+    * branch if come condition holds, represented by condition flags 
+    * condition flags are set as a side effect of **every** arithmetic operation
+* Arithmetic instructions change part of the %rflags register as a side effect
+of their operation.
+    - zf: zero flag
+    - sf: sign flag, sign bit == 1
+    - cf: carry flag, unsigned overflowed
+    - of: overflow flag, signed overflowed
+* jump
+    - j, jump
+    - je, jump if equal 0 (check zf)
+    - jne, jump if not equal
+    - jg, jump if greater
+    - jge, jump if greater or equal
+    - jl, jump if less
+    - jle, jump if less or equal
+    - ja, jump if above (unsigned)
+    - jae, jump if above or equal (unsigned)
+    - jb, jump if below (unsigned)
+    - jbe, jump if blow or equal (unsigned)
+    - js, jump if sign bit
+    - jns, jump if not sign bit
+* `test` & `cmp`
+    * throw away the result, except for condition codes.
+    * `test`: binary-and
+        * `testq %rax, %rax`: 
+            * load the condition flags appropriately for a single register
+            * `testq %rax, %rax; je L`: jumps to L if and only if `%rax` is zero
+    * `cmp`: substraction
+        * `cmpq %rax, %rbx` evaluates `%rbx - %rax`
+        * `cmpq %rax, %rbx; jg L`: jump iff `%rbx` is greater than `%rax`
+
 Questions as we go
 ==================
 * [x] what is this assembly standard? what are the assembly standards? 
@@ -176,137 +299,3 @@ Questions as we go
 * [-] what are %rflags used for
 * [-] directive: `.long`, `.text`, `.data`
 * [ ] ldr, str, mov, lea, and more
-
-TIL
-===
-* register
-    * Loading a value into a 32-bit register name sets the upper 32 bits of the 
-    register to zero
-    * Loading a value into a 16- or 8-bit register name leaves all other bits 
-    unchanged.
-    * `movzbl` moves an 8-bit quantity (a byte) into a 32-bit register (a 
-    longword) with zero extension
-    * sign extension (filling with 1's or 0's)
-* instr
-    * `incl (%rax)`: `movl (%rax), %ebx; incl %ebx; movl %ebx, (%rax)`
-    * `leaq 0x18(%rax,%rbx,4), %rcx`: `%rcx := %rax + 2 * %rbx`
-* labels
-    * used to compute addresses
-* directives
-    * instructions to the assembler
-    * used w/ labels
-        ```asm
-            .globl  _Z1fiii
-            .type   _Z1fiii, @function
-        _Z1fiii:
-            ...
-            .size   _Z1fiii, .-_Z1fiii
-        ```
-    * `.long`
-        ```asm
-        g:
-            .long 10
-        ```
-    * `.text`, `.data`
-
-* disassembly 
-    * assembly that is disassembled from executable instructions
-    * GDB, or `objdump -d <obj file>`, or `objdump -S <obj file>`
-    * no intermediate labels or directives; they're compiled away
-    * linking changes the address
-* position independent executables
-    * a security feature
-* assembly standard
-    * AT&T & Intel 
-* RISC vs CISC
-    * RISC - reduced instruction set computer
-    * CISC - complex instruction set computer
-    * The fundamental difference between the two is that RISC has less number of
-    instructions, with each one capable of performing a single operation, while
-    CISC has a large number of complex instructions capable of carrying out
-    multiple internal operations.
-
-Demystification
-===============
-## Address vs Value
-* regular
-    * register
-        - e.g. `%rax`
-    * memory
-        - e.g. `0x18(%rax,%rbx,4)`, `4`
-        - symbol: 
-            - `g`: conventional program
-            - `g(%rip)` - position independent executable (PIE)
-    * immediate 
-        - e.g. `$4`, `$g`
-* jump
-    * register
-        - e.g. `*%rax`
-    * memory
-        - e.g. `*0x18(%rax,%rbx,4)`, `*4`, `*g`, `*g(%rip)`
-    * immediate
-        - e.g. `4`, `g`
-* side notes
-    * think (register, memory) as variables in c++, literals as literals in c++
-    * `g` label represents an address
-* examples
-    * register & literals only
-        - `addl %rax, %rbx`   : `%rbx := %rbx + %rax`
-        - `addl $1, %rbx`     : `%rbx := %rbx + $1`
-    * address & value in memory
-        - `movl %rbx, (%rax)` : `(%rax) := %rbx`
-        - `movl (%rax), %rbx` : `%rbx := (%rax)`
-        - `movl $1, (%rax)`   : `(%rax) := $1`
-
-## Size
-* assembly instructions are generally suffixed with the letters "b", "s", "w", 
-"l", "q" or "t" to determine what size operand is being manipulated.
-* If the suffix is not specified, and there are no memory operands for the 
-instruction, GAS infers the operand size from the size of the destination 
-register operand (the final operand).
-* `movzbl` moves an 8-bit quantity (a byte) into a 32-bit register (a longword) 
-with zero extension
-
-* instructions
-    * `q, l, w, b`
-    * 64 - `addq`
-    * 32 - `addl`
-    * 16 - `addw`, `adds`
-    * 8  - `addb`
-    * diff meaning for floating point
-* registers, part 1
-    * `r, e, -, l/h`
-    * 64 - `rax, rbx, rcx, rdx, rsi, rdi`
-    * 32 - `eax, ebx, ecx, edx, esi, edi`
-    * 16 - `ax, bx, cx, dx, si, di`
-    * 8  - `al, bl, cl, dl, sil, dil`
-* registers, part 2
-    * `-, d, w, b`
-    * 64 - `r8, r9`
-    * 32 - `r8d, r9d`
-    * 16 - `r8w, r9w`
-    * 8  - `r8b, r9b`
-
-Take-away
-=========
-## address & value
-* register
-    - e.g. `%rax`
-* memory
-    - e.g. `0x18(%rax,%rbx,4)`, `4`
-    - symbol: 
-        - `g`: conventional program
-        - `g(%rip)` - position independent executable (PIE)
-* immediate 
-    - e.g. `$4`, `$g`
-    - jump: e.g. `4`, `g`
-
-## size
-```
-64      32      16      8       - bits
-q       l       w       b       - instr
-%rax    %eax    %ax     %al     - reg
-%r8     %r8d    %r8w    %r8b    - reg
-```
-* `sizeof(bool)` == `sizeof(char)` == 1 byte
-* Each address identifies a single byte (eight bits) of storage.
