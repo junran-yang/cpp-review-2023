@@ -1,11 +1,26 @@
 #include <iostream>
 
-template <class T> void allDiffer(T a, T b) {
-  a.demo();
+template<class T>
+class ListNode {
+  public:
+    ListNode<T>(T item, ListNode<T>* prev, ListNode<T>* next);
+    T& item();
+    const T& item() const;
+    ListNode<T>* prev() const;
+    ListNode<T>* next() const;
+
+    T itemTimesFive() const;
+
+  private:
+    T item_;
+    ListNode<T>* prev_;
+    ListNode<T>* next_;
+};
+
+template<class T>
+ListNode<T>* ListNode<T>::prev() const {
+    return prev;
 }
 
-void allDiffer(double a, double b) {}
-
 int main() {
-  allDiffer(1, 2);
 }
