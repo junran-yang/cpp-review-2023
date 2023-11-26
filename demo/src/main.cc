@@ -1,7 +1,11 @@
 #include <iostream>
 
+template <class T> void allDiffer(T a, T b) {
+  a.demo();
+}
+
+void allDiffer(double a, double b) {}
 
 int main() {
-  int a[] = "hello";
-  std::cout << a << std::endl;
+  allDiffer(1, 2);
 }

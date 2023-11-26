@@ -67,11 +67,16 @@ Section 01 Inline
 * the compiler does this with the source code? 
 * address of inline functions? 
 
-Section 02 Function Templates
+questions
 ================================================================================
-## running example
-
-
-## questions
-* ultimate goal is to be able to write one by yourself
-
+* ultimate goal 
+    * is to be able to write one by yourself
+    * and also to navigate thru code quickly
+* how is template different from macro
+* when is templated function generated? 
+    * running? i suspect not
+    * linking? i suspect not
+    * comipling
+        * then how to avoid 2 generated in the same TU
+        * in diff TU
+* what's the ODR rule for inline again? 
