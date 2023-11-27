@@ -1,5 +1,5 @@
 Take-Away
-=========
+================================================================================
 ## inheritance
 * accessibility modifier: 
     * public - remember this keyword, esp in multiple inheritance
@@ -161,8 +161,8 @@ class Derived : public Base {
 };
 ```
 
-Abbreviated
-===========
+Abbreviated Take-away
+================================================================================
 * inheritance
     * public, private, protected
     * member variables
