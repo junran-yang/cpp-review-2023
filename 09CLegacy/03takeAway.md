@@ -103,3 +103,44 @@ Take Away
 * pointers to function - consider function object
 * macro - no
 * switch - ok
+
+Shortened Take-away
+================================================================================
+## Evaluation Order
+* precedence & association
+    * `::`
+    * unary, e.g. `&a.b->c`
+    * binary
+        * arithmetic > comparison (`>; ==`) > logical (`&&; ||`)> assignment
+        * bitwise: shift > logical (`&; ^; | `)
+* evaluation order
+    * unspecified
+    * within an expression
+    * value computation: guarantee - tree
+    * side effects: guarantee - sequence pointes, e.g. `a && b`; `f(a, b, c)`
+
+## Array & String
+* array
+    * aggregate initialization
+    * name decay to pointer
+        * `int* p = a;`
+        * `demo(a);`, `int*, int[]`
+        * `a[3];` - indexing is for pointer
+    * multidimensional array
+        * the type is only important for pointer it decays to 
+        * `int (*p)[5][7] = a;`
+* string
+    * char array, nothing special
+    * char pointer - special handling for `\0`
+    * string literal - e.g. "hello", `const char[N]`, trailing `\0`, storage
+
+## function pointer
+* syntax
+    * `void (*demo)(int) = f;`
+    * syntax for passing & returning
+
+## macro
+* preprocessing
+
+## switch
+* `goto`
