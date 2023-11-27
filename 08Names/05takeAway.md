@@ -1,5 +1,5 @@
 TIL
-===
+================================================================================
 ## scope
 * (note to self) the name of a non-static class member is accessible, but the 
   use is invalid
@@ -56,7 +56,7 @@ TIL
     ```
 
 Take-away
-=========
+================================================================================
 ## scope
 * what can have a name: namespace, class, function, variable
 * what can define a scope: namespace, class, block
@@ -66,11 +66,11 @@ Take-away
     * block: (), {}, initialization list
 * to introduce a name
     * the name is scoped to the scope it is in (cannot introduce from outside)
-    * to access the name
-        * namespace, class  : the full qualified name `::a::b::A::x`
-        * block             : the name cannot be accessed from outside
 * to use a name
     * can use name both inside and outside of the scope
+    * for names defined in
+        * namespace, class  : the full qualified name `::a::b::A::x`
+        * block             : the name cannot be accessed from outside
     * name lookup
         * unqualified: search outwards
         * qualified: first name follows rules for the unqualified 
@@ -91,7 +91,7 @@ Take-away
             * search outwards first until hit lowest common ancestor; 
             * then search the namespace as well as the lca; 
             * and then outwards
-        * applies to names introduced later as well
+        * applies to names introduced after `using` as well
     * transitive
     * not allowed in class
 * using declaration
@@ -172,3 +172,38 @@ bin offset                                                  0x0008
     * moving towards c++
         * class static functions, class instance functions, class static variables
         * don't over think about it
+
+Shortened Take-away
+================================================================================
+## scope
+* introduce a name - must from within a scope
+* use a name - first perform name lookup
+    * provide definition
+    * use definition
+* namelookup 
+    * qualified
+    * unqualified
+    * argument-dependent lookup (free, unqualified function)
+
+## alias
+* `using namespace a;` - name lookup only
+* `using a::x;` in namespace; in class
+* `using B = A; typedef A B;`
+* `namespace b = a;`
+
+## name linkage
+* linking
+    * extenal symbol
+    * local symbol
+* compiling - producing files for the above to link
+    * definition -> symbol
+        * in the context of c; don't over think about c++ 
+            * (global var, local static var, free func)
+            * (class static var, class static func, class instance func)
+        * extern/local
+            * e.g. `static int a; namespace {int a;}` => local 
+            * e.g. `void demo() {static int a;}` => local
+            * e.g. `static void demo() {}; namespace {void demo(){} }` => local
+        * name mangling (each name correspond to the right symbol)
+            * encompassing scope, function args, extern/local
+        * introduce - use (find the right name to compile for)
