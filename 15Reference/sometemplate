@@ -1,0 +1,222 @@
+Template
+================================================================================
+## inline
+* inline concept: copy function body to call site
+* inline keyword: make weak symbol
+* using inline keyword can make inline concept possible
+* performance
+    * maybe slower due to larger file
+    * compile time slower due to more files to modify
+
+## function template
+* motivation
+* template function
+    * `template<class T> bool allDiffer(T a, T b, T c);`
+    * `template<class T, class U, class V> bool allDiffer(T a, U b, V c);`
+    * `template<class T, class U, class V> bool allDiffer(const T& a, const U& b, const V& c)`
+* calling template function
+    * `allDiffer<int>(1, 2, 3);`
+    * `allDiffer<>(1, 2, 3);` - type deduction rule
+    * `allDiffer(1, 2, 3);` - function resolution rule
+* template instantiation
+    * happens at call site; duck typing
+    * template visible to all; instantiated template function - weak symbol
+* compile time polymorphism
+
+## class template
+* the template
+    * `template<class T> class ListNode {};`
+    * `template<class T> ListNode<T>* ListNode<T>::prev() const {}`
+* using the template
+    * `ListNode<int> nodeA(5, 0, 0);` - no type deduction; no `ListNode`
+    * `nodeA.prev();`
+* instantiation
+    * function instantiation delayed until the function is used
+    * If a function is never used then the duck never checks it. Hence the 'no
+    harm, no foul' reference
+
+## template parameters
+* default template arguments
+    * `template<int N, class T, class A = T> A accumulate(const ListNode<T>& data);`
+* non-type template parameter
+    * `template<int N, class T> T accumulate(const ListNode<T>& data);`
+    * Different values of N will generated different functions
+* template class template parameter
+   * `template<int N, class T, template <class> class S, class A = T> A accumulate(const S<T>& data);`
+   * some times we don't really need to work out T
+* trait
+    ```cpp
+    template <class T>
+    class ListNode {
+    public:
+        typedef T item_type;
+    }
+
+    typedef typename S::item_type A;
+    ```
+* decltype
+    ```cpp
+    using A = std::decay_t<decltype(data.item())>;
+    ```
+
+## specialization
+* primary template
+    * `template<class T, class U, class V> struct Toople;`
+* secondary template
+    * `template<> struct Toople<bool, bool, bool>;`
+    * `template<class T> struct Toople<T*, T*, T*>;`
+    * `template<class T, class U> struct Toople<T, U, double>;`
+    * The compiler will choose the most specialized implementation available
+    once it knows what T, U and V are.
+* traits classes
+    ```cpp
+    int maxInt = std::numeric_limits<int>::max();
+    double maxDouble = std::numeric_limits<double>::max();
+    ```
+    * traits class – its job is to hold meta information about another type
+
+`_v`, `_t`
+================================================================================
+## usage summary in EventCB
+* `_v` in CBEvent
+    * is_convertible_v
+    * is_trivially_copyable_v
+    * is_reference_v
+    * is_rvalue_reference_v
+    * is_reference_wrapper_v
+* `_t`
+    * conditional_t
+    * enable_if_t
+    * remove_reference_t
+    * remove_const_t
+    * remove_cv_t
+    * decay_t
+    * add_const_t
+
+## is_convertible_v
+* interface
+    ```cpp
+    template<class From, class To>
+    struct is_convertible;
+
+    template<class From, class To>
+    inline constexpr bool is_convertible_v = is_convertible<From, To>::value;
+    ```
+* impl
+    ```cpp
+    namespace detail {
+        template<class T>
+        auto test_returnable(int) -> decltype(
+            void(static_cast<T(*)()>(nullptr)), std::true_type{}
+        );
+        template<class>
+        auto test_returnable(...) -> std::false_type;
+    }
+    template<class From, class To>
+    struct is_convertible : std::integral_constant<bool,
+        (
+            decltype(detail::test_returnable<To>(0))::value &&
+            decltype(detail::test_implicitly_convertible<From, To>(0))::value
+        ) ||
+        (
+            std::is_void<From>::value &&
+            std::is_void<To>::value
+        )
+    > {};
+    ```
+    * decltype taking comma separated expression (`decltype(4.2, 3)`):
+        * It's an comma-separated list of expressions, the type is identical to
+        the type of the last expression in the list. It's usually used to verify
+        that the first expression is valid (compilable, think SFINAE), the
+        second is used to specify that decltype should return in case the first
+        expression is valid.
+    * "varialbe template" - `is_convertible_v`
+
+## is_reference_v
+* interface
+    ```cpp
+    template< class T > struct is_reference;
+    template< class T >
+    inline constexpr bool is_reference_v = is_reference<T>::value;
+    ```
+* impl
+    ```cpp
+    template<class T> struct is_reference : std::false_type {};
+    template<class T> struct is_reference<T&> : std::true_type {};
+    template<class T> struct is_reference<T&&> : std::true_type {};
+    ```
+
+## is_reference_wrapper_v
+```cpp
+template <class T>
+struct is_reference_wrapper : false_type {};
+
+// specialization
+template <class T>
+struct is_reference_wrapper<reference_wrapper<T>> : true_type {};
+```
+
+## conditional_t
+* interface
+    ```cpp
+    template<bool B, class T, class F>
+    struct conditional;
+
+    template< bool B, class T, class F >
+    using conditional_t = typename conditional<B,T,F>::type;
+    ```
+    * Provides member typedef type, which is defined as T if B is true at
+    compile time, or as F if B is false.
+    * `B ? T : F;`
+* impl
+    ```cpp
+    template<bool B, class T, class F>
+    struct conditional { using type = T; };
+
+    template<class T, class F>
+    struct conditional<false, T, F> { using type = F; };
+    ```
+
+## enable_if_t
+* interface
+    ```cpp
+    template< bool B, class T = void >
+    struct enable_if;
+
+    template< bool B, class T = void >
+    using enable_if_t = typename enable_if<B,T>::type;
+    ```
+    * If B is true, std::enable_if has a public member typedef type, equal to
+    T; otherwise, there is no member typedef.
+* impl
+    ```cpp
+    template<bool B, class T = void>
+    struct enable_if {};
+
+    template<class T>
+    struct enable_if<true, T> { typedef T type; };
+    ```
+
+## remove_reference_t
+* interface
+    ```cpp
+    template< class T >
+    struct remove_reference;
+
+    template< class T >
+    using remove_reference_t = typename remove_reference<T>::type;
+    ```
+* impl
+    ```cpp
+    template<class T> struct remove_reference { typedef T type; };
+    template<class T> struct remove_reference<T&> { typedef T type; };
+    template<class T> struct remove_reference<T&&> { typedef T type; };
+    ```
+
+## decay_t
+* Performs the type conversions equivalent to the ones performed when passing
+  function arguments by value. Formally:
+    * If T is "array of U" or reference to it, the member typedef type is U*.
+    * Otherwise, if T is a function type F or reference to one, the member
+    typedef type is std::add_pointer<F>::type.
+    * Otherwise, the member typedef type is std::remove_cv<std::remove_reference<T>::type>::type.
