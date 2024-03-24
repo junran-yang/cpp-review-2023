@@ -1,0 +1,270 @@
+Guidlines
+================================================================================
+* [x] move semantic
+    * pass
+        * by value
+        * by reference
+        * by rvalue reference
+    * return
+        * where does the logical copy happen
+        * by value
+        * by reference
+        * by rvalue reference
+            * return value optimization (rvo)
+    * matrix of param and arg
+        * can we pass a rvalue reference arg to a lvalue reference param?
+    * misc
+        * this can be more than just copy con and assignment right
+* [x] reference
+    * [x] object, lvalue reference, rvalue reference
+    * [x] essentially a type
+    * [x] when binding - different
+    * [x] when used - all the same
+        * does is_reference_v differ
+* [x] value category of expresssion
+    * [x] think about abstract syntax tree (ast)
+        * [x] type of expression
+        * [x] value of expression
+    * [x] category
+        * [x] lvalue, xvalue, prvalue
+            * [x] what are the formal rule
+        * [x] glvalue, rvalue
+    * [x] conversion
+        * [x] how is move implemented
+        * [x] why did static_cast<int&&>() return rvalue
+            * [x] rather, does static_cast<int>() return rvalue as well
+* [x] into the template world - perfect forwarding
+    * [x] why did move not good enough here
+    * [x] topics
+* [x] misc - deferred
+    * how to understand When a glvalue appears in a context where a prvalue is
+    expected, the glvalue is converted to a prvalue; while we can't bind rvalue
+    reference to lvalue
+    * what does temporary mean and their lifetime
+
+Move Semantics
+================================================================================
+## my notes (just outline, not so fleshed out)
+* pass
+    * by value
+    * by reference
+    * by rvalue reference
+* return
+    * where does the logical copy happen
+        - `int f() {}`
+        - `int ret = ...`
+    * by value
+    * by reference
+    * by rvalue reference
+        * return value optimization (rvo)
+* matrix of param and arg
+    * can we pass a rvalue reference arg to a lvalue reference param?
+* misc
+    * this can be more than just copy con and assignment right
+
+## geeks
+* relevant in 2 different situations
+    * initialization
+    * assignment
+* these situations rely on special member functions to get the job done
+    ```cpp
+    struct S {
+        S(T t): _t(t) {}
+
+        S(const S& s);
+        S& operator=(const S& s);
+
+        S(const S&& s);
+        S& operator=(const S&& s);
+
+        T* _t;
+    }
+    ```
+    * Note that we’re keeping the original constructor and operator for when
+    the actual parameter is an lvalue.
+    * However, if we only could force the actual parameter to be an rvalue,
+    then we can execute this new constructor or assignment operator
+* turning lvalue into an rvalue
+    * `static_cast<S&&>(s);`
+    * `move(s);`
+
+References
+================================================================================
+## my notes
+```
+    (T, T&, T&&) +---------+
+       type ---- |         |    (alias)
+                 | storage | --- name (optional)
+       value --- |         |
+                 +---------+
+                     obj
+```
+* object, lvalue reference, rvalue reference
+   ```cpp
+    std::string s1("hello");
+    std::string& lref = s1;
+    std::string&& rref = std::move(s1);
+    ```
+* when binding - different
+* when used - all the same
+    * can we pass a && to a function that takes &? - yes
+        ```cpp
+        void demo(int& a) {
+            std::cout << a << std::endl;
+        }
+
+        int main(int argc, char** argv) {
+            int&& a = 5;
+            demo(a);
+        }
+        ```
+    * does is_reference_v differ
+        - is is not how is_reference_v is used for; is_reference_v is a template
+        bool:
+        ```cpp
+        static_assert(is_reference_v<int&&>);
+        ```
+* essentially a type, therefore overloaded function
+    ```cpp
+    int f(int&);
+    int f(int&&);
+    ```
+
+## from stackoverflow (very informative)
+* https://stackoverflow.com/questions/36232671/rvalue-references-what-exactly-are-temporary-objects-what-is-their-scope-an
+* An rvalue reference is a reference that can only bind to an expression of
+value category rvalue. (This includes prvalue and xvalue). The word rvalue in
+its name refers to what it binds to, not its own value category.
+* All named references in fact have category lvalue. Once bound, there is no
+difference in behaviour between an rvalue reference and an lvalue reference.
+
+* e.g.
+    ```cpp
+    std::string&& rref = std::string("hello");
+    ```
+    * rref has value category lvalue , and it designates a temporary object.
+* e.g.
+    ```cpp
+    std::string s1("hello");
+    std::string&& rref = std::move(s1);
+    std::string& lref = s1;
+    ```
+    * In this case, rref is an lvalue, and it designates a non-temporary object.
+    Further, lref and rref (and even s1!) are all indistinguishable from hereon
+    in, except for specifically the result of decltype.
+
+
+Value Category of an Expression
+================================================================================
+## think about abstract syntax tree (ast)
+
+## category
+```
+|   lvalue  |   xvalue  |   prvalue  |
+|-----------+-----------+------------+
+            ^         rvalue         ^
+            +------------------------+
+^        glvalue        ^
++-----------------------+
+```
+## formal
+* lvalue: designates a function or an object
+* xvalue: also refers to an object, usually near the end of its lifetime, e.g.
+    * a function call or an overloaded operator expression, whose return type
+    is rvalue reference to object, such as `std::move(x)`
+    * a cast expression to rvalue reference to object type, such as
+    `static_cast<char&&>(x)`
+* prvalue: is an rvalue that is not an xvalue.
+
+## explained
+* lvalue
+    * an lvalue is an expression that ultimately locates the object in memory.
+    ```cpp
+    int lv1;                    // Designates an object
+    int &lv2{lv1};              // Reference, designates an object
+    int *lv3;                   // Pointer, designates an object
+    int &lv4() { return lv1; }  // Function returning a reference, designates an object
+    ```
+    * lv1 is not just an lvalue in the statement where it is declared
+* prvalue
+    * a prvalue represents a direct value.
+    ```cpp
+    int lv1 = 42;
+    int f1(int x) { return 6 * x; }
+
+    int prv1{42};                   // expression (42) is prvalue
+    int prv2{lv1};                  // expression (lv1) is prvalue;
+    int prv3{f1(7)};                // expression (f1(7)) is prvalue
+    int prv4{(lv1 + f1(7)) / 2};    // expression (temporary object) is prvalue
+    ```
+    * cases (non-exhaustive, per cppreference)
+        * a literal (except for string literal), such as `42, true or nullptr`
+        * a function call or an overloaded operator expression, whose return
+        type is non-reference, such as `str.substr(1, 2), str1 + str2, or it++`
+        * a cast expression to non-reference type, such as
+        `static_cast<double>(x), std::string{}, or (int)42`
+* xvalue
+    * xvalues are also known as eXpiring values.
+    * cases (non-exhaustive, per cppreference)
+        * a function call or an overloaded operator expression, whose return
+        type is rvalue reference to object, such as `std::move(x)`
+        * a cast expression to rvalue reference to object type, such as
+        `static_cast<char&&>(x)`
+
+## lvalue => rvalue
+* move
+    ```cpp
+    template<class T>
+    typename remove_reference<T>::type&& move(T&& param) {
+        using ReturnType = typename remove_reference<T>::type&&;
+        return static_cast<ReturnType>(param);
+    }
+    ```
+* static_cast
+    * xvalue: a cast expression to rvalue reference to object type, such as
+    `static_cast<char&&>(x)`
+    * prvalue: a cast expression to non-reference type, such as
+    `static_cast<double>(x), std::string{}, or (int)42`
+
+## from stackoverflow (very informative)
+* https://stackoverflow.com/questions/36232671/rvalue-references-what-exactly-are-temporary-objects-what-is-their-scope-an
+
+* expression value category; expression value
+    * The terms rvalue, lvalue etc. are value categories of an expression. These
+    describe expressions, not values or objects. Every expression has a value
+    category.
+    * Also, every expression has a value, except expressions of void type. These
+    are two different things. (The value of an expression has a non-reference
+    type.)
+
+* expression and object
+    * An expression of value category `rvalue` may designate a temporary object,
+    or a non-temporary object, or a value of built-in type.
+    * The expressions which create a temporary object all have value category
+      `prvalue`
+        * `std::string("hello");`
+    * it is then possible to form expressions with category lvalue which
+      designate that same temporary object.
+        * `const std::string &v = std::string("hello");`
+        * In this case v is an lvalue, but it designates a temporary object.
+        The lifetime of this temporary object matches the lifetime of v, as
+        described in the earlier cppreference link.
+
+Into the Template World (just a brief intro)
+================================================================================
+* forward
+    ```cpp
+    template<class T>
+    T&& forward(typename remove_reference<T>::type& param) {
+        return static_cast<T&&>(param);
+    }
+    ```
+* topics
+    * forward
+    * universal reference
+    * use forward for universal reference
+    * overloading universal references
+        * avoid
+        * alternatives
+    * reference collapsing
+    * failure cases
